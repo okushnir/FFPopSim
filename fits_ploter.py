@@ -9,7 +9,8 @@ import math
 from scipy import stats
 import seaborn as sns
 import numpy as np
-
+from statannotations.Annotator import Annotator
+import contextlib
 
 
 sns.set_style("ticks")
@@ -163,41 +164,23 @@ def main():
     #Plots
     hue_order = ["HIV Simulated sample", "HIV Simulated sample + Sequence Error"]
     plt.style.use('classic')
-
     sns.set_palette("Set2")
-
-    g1 = sns.boxenplot(x="Mutation", y="Mutation rate", hue="Type", data=all_data, hue_order=hue_order)
+    g1 = sns.violinplot(x="Mutation", y="Mutation rate", hue="Type", data=all_data, hue_order=hue_order)
     g1.set_yscale("log")
     g1.set_ylim(10**-10, 10**-1)
     g1.set_xticklabels("")
-    g1.set(xlabel="Major > Minor")
-    # add_stat_annotation(g1, data=all_data, x="Mutation", y="Mutation rate", hue="Virus", order=mutation_order,
-    #                     boxPairList=[(("A>G\nall", "RVB14"), ("A>G\nall", "CVB3")), (("A>G\nall", "RVB14"), ("A>G\nall",
-    #                                                                                                          "OPV")),
-    #                                  (("A>G\nadar-like", "RVB14"), ("A>G\nadar-like", "CVB3")),
-    #                                  (("A>G\nadar-like", "RVB14"),("A>G\nadar-like", "OPV")),
-    #                                  (("A>G\nnonadar-like", "RVB14"), ("A>G\nnonadar-like", "CVB3")),
-    #                                  (("A>G\nnonadar-like", "RVB14"),("A>G\nnonadar-like", "OPV")),
-    #                                  (("U>C", "RVB14"), ("U>C", "CVB3")), (("U>C", "RVB14"),("U>C", "OPV")),
-    #                                  (("G>A", "RVB14"), ("G>A", "CVB3")), (("G>A", "RVB14"),("G>A", "OPV")),
-    #                                  (("C>U", "RVB14"), ("C>U", "CVB3")), (("C>U", "RVB14"),("C>U", "OPV"))],
-    #                     test='Mann-Whitney', textFormat='star', loc='inside', verbose=2)
-    # add_stat_annotation(g1, data=all_data, x="Mutation", y="Mutation rate", hue="Virus", order=mutation_order,
-    #                     boxPairList=[(("A>G\nall", "RVB14"), ("A>G\nadar-like", "RVB14")), (("A>G\nall", "RVB14"), ("A>G\nnonadar-like", "RVB14")),
-    #                                  (("A>G\nall", "RVB14"), ("U>C", "RVB14")),
-    #                                  (("A>G\nall", "RVB14"),("G>A", "RVB14")), (("A>G\nall", "RVB14"), ("C>U", "RVB14"))],
-    #                     test='Mann-Whitney', textFormat='star', loc='inside', verbose=2)
+    g1.set(xlabel="Major allele > Minor allele")
+    pairs = [(("Mutation", "HIV Simulated sample"), ("Mutation", "HIV Simulated sample + Sequence Error"))]
+    annot = Annotator(g1, pairs, x="Mutation", y="Mutation rate", hue="Type", data=all_data, hue_order=hue_order)
+    annot.configure(test='Mann-Whitney', text_format='star', loc='outside', verbose=2,
+                    comparisons_correction="Bonferroni")
+    annot.apply_test()
+    file_path = "sts.csv"
+    with open(file_path, "w") as o:
+        with contextlib.redirect_stdout(o):
+            passage_g1, test_results = annot.annotate()
 
-    # g1.set(ylabel="Muataion rate (log10)")
-
-    # g1.set_yscale('symlog', linthreshy=1*10**-6)
-    # yaxis = plt.gca().yaxis
-    # yaxis.set_minor_locator(MinorSymLogLocator(1e-1))
-    # g1.set_title("Mutation rate distribution")
-    # g1.set_yticks(ticks=[10**-5, 10**-6, 0], minor=True)
-    # g1.set_ylim(10 ** -8, 10 ** -3)
-    # g1.legend(bbox_to_anchor=(1.05, 0.5), loc="center left", borderaxespad=0.)
-    # sns.set(font_scale=0.6)
+    g1.legend(bbox_to_anchor=(0.5, -0.3), loc="lower center", borderaxespad=0.)
     plt.tight_layout()
     plt.savefig("mutation_rate.png", dpi=300)
     plt.close()

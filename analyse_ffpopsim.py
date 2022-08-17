@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import random
 import seaborn as sns
+from PrimerID_dist import primerID_counter
 import scipy.stats as sts
 from scipy.optimize import curve_fit
 from sklearn.neighbors import KernelDensity
@@ -37,7 +38,7 @@ def error_rate_dist(data):
 #     return pop_arr
 
 
-def seq_error_noise(pop_arr, error_rate_data):
+def seq_error_noise(pop_arr, error_rate_data, primerid_file):
     error_rate_data = error_rate_data[error_rate_data["Mutation"] == "U>C"]
     np.random.seed(700)
     for i in pop_arr:
@@ -46,10 +47,14 @@ def seq_error_noise(pop_arr, error_rate_data):
         frequency = row["Frequency"].values[0]
         if rand_number < frequency:
             pop_arr[i] = 1-pop_arr[i]
+    sum_id, mean_id, std_id = primerID_counter(primerid_file)
+    pcr_boost = int(random.gauss(mean_id, std_id))
+    if pcr_boost != 0:
+        pop_arr = pop_arr*pcr_boost
     return pop_arr
 
 
-def analyse_ffpop(population_size, generations, chosen_pop, pos_no, data_error_rate, mu, sigma):
+def analyse_ffpop(population_size, generations, chosen_pop, pos_no, data_error_rate):
     replicative = np.load("replicative_fitness_coefficients.npy")
     replicative_trans = np.array(([replicative]))
     replicative_trans = replicative_trans.T
@@ -90,7 +95,7 @@ def analyse_ffpop(population_size, generations, chosen_pop, pos_no, data_error_r
             new_array = np.random.choice(sim_pop, replace=False, size=chosen_pop)
             new_freq = sum(new_array)/len(new_array)
             hiv_t_df["New_freq"][i] = new_freq
-            sim_pop_noisy = seq_error_noise(new_array, mu, sigma)
+            sim_pop_noisy = seq_error_noise(new_array, data_error_rate, primerid_file="primer_ids.txt")
             noisy_freq = sum(sim_pop_noisy)/len(sim_pop_noisy)
             hiv_t_df["Noisy_freq"][i] = noisy_freq
         hiv_t_df.to_pickle("hiv.{}.pkl".format(str(g)))
@@ -138,17 +143,26 @@ def plot_sim_noisy(generations):
     united_df_noisy = united_df_noisy.drop(["frequency", "New_freq"], axis=1)
     united_df_noisy["Type"] = "HIV Simulated sample + Sequence Error"
     united_df_noisy = united_df_noisy.rename(columns={"Noisy_freq": "frequency"})
+    united_df_noisy["log_frequency"] = np.log10(united_df_noisy["frequency"])
     rv_data = pd.read_csv("table.csv")
     rv_data = rv_data[["Pos", "Frequency", "Type", "passage"]]
     rv_data = rv_data[rv_data["Type"] == "Synonymous"]
     rv_data = rv_data.drop(["Type"], axis=1)
     rv_data = rv_data.rename(columns={"Frequency": "frequency", "passage": "gen", "Type": "Mutation Type"})
+    rv_data["log_frequency"] = np.log10(rv_data["frequency"])
     rv_data["Type"] = "RVB14 RdRp Synonymous mutations"
-    data = pd.concat([united_df_sim, united_df_sample, united_df_noisy, rv_data])
+    data = pd.concat([united_df_sim, united_df_noisy, rv_data])
     plot = sns.catplot(x="gen", y="frequency", data=data, hue="Type", kind="box", order=x_order)
     plot.set(xlabel="Passage", ylabel="Variant Frequency", yscale="log", ylim=(10 ** -5, 10 ** -2), xticklabels=x_ticks)
     plt.savefig("fig4.png")
     plt.close()
+
+    united_df_noisy_passage2 = united_df_noisy[united_df_noisy["gen"] == 2]
+    rv_data_passage0 = rv_data[rv_data["gen"] == 0]
+    print("mean of HIV Simulated sample + Sequence Error: {0}".format(round(united_df_noisy_passage2["log_frequency"].mean(), 2)))
+    print("std of HIV Simulated sample + Sequence Error: {0}".format(round(united_df_noisy_passage2["log_frequency"].std(), 2)))
+    print("mean of RVB14 RdRp Synonymous mutations: {0}".format(round(rv_data_passage0["log_frequency"].mean(), 2)))
+    print("std of RVB14 RdRp Synonymous mutations: {0}".format(round(rv_data_passage0["log_frequency"].std(), 2)))
 
 
 def main():
@@ -158,14 +172,13 @@ def main():
     pos_no = 100
     data_error_dist = pd.read_csv("error_table.csv")
     # mu, sigma = error_rate_dist(data_error_dist)
-    # sim_pop_new, pop_arr_noise = analyse_ffpop(population_size, generations, chosen_pop, pos_no, data_error_dist)
-    # np.save("sim_pop_new.npy", sim_pop_new)
-    # np.save("pop_arr_noise.npy", pop_arr_noise)
-
-    # df_all = united_table_for_fits(generations, freq_type="Noisy_freq")
-    # df_all.to_csv("sim_data_hiv_noisy.txt", index=False, sep="/t")
-
+    sim_pop_new, pop_arr_noise = analyse_ffpop(population_size, generations, chosen_pop, pos_no, data_error_dist)
+    np.save("sim_pop_new.npy", sim_pop_new)
+    np.save("pop_arr_noise.npy", pop_arr_noise)
     plot_sim_noisy(generations)
+
+    df_all = united_table_for_fits(generations, freq_type="Noisy_freq")
+    df_all.to_csv("sim_data_hiv_noisy.txt", index=False, sep="\t")
 
     # sim_pop_new = np.load("sim_pop_new.npy")
     # pop_arr_noise = seq_error_noise(sim_pop_new, data_error_dist)

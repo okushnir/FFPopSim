@@ -1,0 +1,18 @@
+Mutation Rate Report
+===============
+FITS v1.3.3
+2022-08-10 (year-month-day) 17:02:43 (hours:minutes:seconds)
+Parameters file: /sternadi/home/volume3/okushnir/ffpopSim/parameters_mutation.txt
+Data file: /sternadi/home/volume3/okushnir/ffpopSim/sim_data_hiv_noisy.txt
+Simulation results used for calculations: 1000
+Alleles: 2
+Total running time 00:08:22 (hh:mm:ss)
+---------------------
+Population size (N) is 10000000
+Used individual mutation rates.
+Distance metric: L1
+ (sampled 10000)
+====================
+from  to    median      MAD         min         max         pval        
+0     1     3.09e-05    4.44e-06    1.65e-05    4.89e-05    8.43e-34    
+1     0     *1.30e-06   1.30e-06    1.03e-09    9.81e-04    2.50e-01    
