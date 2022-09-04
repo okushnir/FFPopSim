@@ -134,14 +134,14 @@ def plot_sim_noisy(generations):
         united_df = pd.concat([united_df, hiv_df])
     united_df_sim = united_df.copy()
     united_df_sim = united_df_sim.drop(["New_freq", "Noisy_freq"], axis=1)
-    united_df_sim["Type"] = "HIV Simulated population"
+    united_df_sim["Type"] = "Simulated population"
     united_df_sample = united_df.copy()
     united_df_sample = united_df_sample.drop(["frequency", "Noisy_freq"], axis=1)
-    united_df_sample["Type"] = "HIV Simulated sample"
+    united_df_sample["Type"] = "Simulated population sample"
     united_df_sample = united_df_sample.rename(columns={"New_freq": "frequency"})
     united_df_noisy = united_df.copy()
     united_df_noisy = united_df_noisy.drop(["frequency", "New_freq"], axis=1)
-    united_df_noisy["Type"] = "HIV Simulated sample + Sequence Error"
+    united_df_noisy["Type"] = "Simulated population sample + sequence error"
     united_df_noisy = united_df_noisy.rename(columns={"Noisy_freq": "frequency"})
     united_df_noisy["log_frequency"] = np.log10(united_df_noisy["frequency"])
     rv_data = pd.read_csv("table.csv")
@@ -159,8 +159,8 @@ def plot_sim_noisy(generations):
 
     united_df_noisy_passage2 = united_df_noisy[united_df_noisy["gen"] == 2]
     rv_data_passage0 = rv_data[rv_data["gen"] == 0]
-    print("mean of HIV Simulated sample + Sequence Error: {0}".format(round(united_df_noisy_passage2["log_frequency"].mean(), 2)))
-    print("std of HIV Simulated sample + Sequence Error: {0}".format(round(united_df_noisy_passage2["log_frequency"].std(), 2)))
+    print("mean of Simulated population sample + sequence error: {0}".format(round(united_df_noisy_passage2["log_frequency"].mean(), 2)))
+    print("std of Simulated population sample + sequence error: {0}".format(round(united_df_noisy_passage2["log_frequency"].std(), 2)))
     print("mean of RVB14 RdRp Synonymous mutations: {0}".format(round(rv_data_passage0["log_frequency"].mean(), 2)))
     print("std of RVB14 RdRp Synonymous mutations: {0}".format(round(rv_data_passage0["log_frequency"].std(), 2)))
 
@@ -177,9 +177,11 @@ def main():
     np.save("pop_arr_noise.npy", pop_arr_noise)
     plot_sim_noisy(generations)
 
+    """Arrnge the data for FITS"""
     df_all = united_table_for_fits(generations, freq_type="Noisy_freq")
     df_all.to_csv("sim_data_hiv_noisy.txt", index=False, sep="\t")
 
+    """Debugging seq_error_noise"""
     # sim_pop_new = np.load("sim_pop_new.npy")
     # pop_arr_noise = seq_error_noise(sim_pop_new, data_error_dist)
 

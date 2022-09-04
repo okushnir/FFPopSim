@@ -143,11 +143,11 @@ def qqplot(x, y, **kwargs):
 def main():
     sim_data = pd.read_table("FITS/sim_data_hiv/posterior_mutation_syn.txt", header=0)
     sim_data = sim_data[["allele0_1"]]
-    sim_data["Type"] = "HIV Simulated sample"
+    sim_data["Type"] = "Simulated population sample"
     sim_data = sim_data.rename(columns={"allele0_1": "Mutation rate"})
     sim_data_noisy = pd.read_table("FITS/sim_data_hiv_noisy/posterior_mutation_syn.txt", header=0)
     sim_data_noisy = sim_data_noisy[["allele0_1"]]
-    sim_data_noisy["Type"] = "HIV Simulated sample + Sequence Error"
+    sim_data_noisy["Type"] = "Simulated population sample + sequence error"
     sim_data_noisy = sim_data_noisy.rename(columns={"allele0_1": "Mutation rate"})
 
     all_data = pd.concat([sim_data, sim_data_noisy], sort=False)
@@ -156,13 +156,8 @@ def main():
     all_data["Mutation rate"] = pd.to_numeric(all_data["Mutation rate"], errors='coerce')
     all_data["Mutation"] = "Mutation"
 
-    # q1 = all_data["Mutation rate"].quantile(0.25)
-    # q3 = all_data["Mutation rate"].quantile(0.75)
-    # all_data = all_data[all_data["Mutation rate"] > q1]
-    # all_data = all_data[all_data["Mutation rate"] < q3]
-
     #Plots
-    hue_order = ["HIV Simulated sample", "HIV Simulated sample + Sequence Error"]
+    hue_order = ["Simulated population sample", "Simulated population sample + sequence error"]
     plt.style.use('classic')
     sns.set_palette("Set2")
     g1 = sns.violinplot(x="Mutation", y="Mutation rate", hue="Type", data=all_data, hue_order=hue_order)
@@ -170,7 +165,7 @@ def main():
     g1.set_ylim(10**-10, 10**-1)
     g1.set_xticklabels("")
     g1.set(xlabel="Major allele > Minor allele")
-    pairs = [(("Mutation", "HIV Simulated sample"), ("Mutation", "HIV Simulated sample + Sequence Error"))]
+    pairs = [(("Mutation", "Simulated population sample"), ("Mutation", "Simulated population sample + sequence error"))]
     annot = Annotator(g1, pairs, x="Mutation", y="Mutation rate", hue="Type", data=all_data, hue_order=hue_order)
     annot.configure(test='Mann-Whitney', text_format='star', loc='outside', verbose=2,
                     comparisons_correction="Bonferroni")

@@ -5,4 +5,4 @@ p-value annotation legend:
      ***: 1.00e-04 < p <= 1.00e-03
     ****: p <= 1.00e-04
 
-Mutation_HIV Simulated sample vs. Mutation_HIV Simulated sample + Sequence Error: Mann-Whitney-Wilcoxon test two-sided with Bonferroni correction, P_val:1.813e-01 U_stat=4.827e+05
+Mutation_Simulated population sample vs. Mutation_Simulated population sample + sequence error: Mann-Whitney-Wilcoxon test two-sided with Bonferroni correction, P_val:1.813e-01 U_stat=4.827e+05
