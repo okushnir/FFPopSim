@@ -5,13 +5,11 @@ import numpy as np
 import random
 import seaborn as sns
 from PrimerID_dist import primerID_counter
-import scipy.stats as sts
-from scipy.optimize import curve_fit
-from sklearn.neighbors import KernelDensity
 
-sns.set(font_scale=1.3)
 sns.set_style("ticks")
+sns.set(font_scale=1.2)
 sns.despine()
+
 
 def error_rate_dist(data):
     data = data[data["Mutation"] == "U>C"]
@@ -19,26 +17,6 @@ def error_rate_dist(data):
     mean = data["log_frequency"].mean()
     std = data["log_frequency"].std()
     return mean, std
-    # data_set = data["log_frequency"].reset_index()
-    # data_set = data_set.fillna(0)
-    # data_set = data_set.drop(["index"], axis=1).reset_index()
-    # data_set = data_set.rename(columns={"index": "count"})
-    # model = sts.gaussian_kde(data_set["log_frequency"])
-    # data_set["density"] = model.pdf(data_set["log_frequency"])
-    # g = sns.lineplot(y="density", x="log_frequency", data=data_set)
-    # plt.savefig("fig2.png")
-    # g = sns.displot(x="log_frequency", data=data_set, kind="kde")
-    # plt.savefig("fig1.png")
-
-
-    # def seq_error_noise(pop_arr, mu, sigma):
-    #     np.random.seed(700)
-    #     for i in pop_arr:
-    #         rand_number = random.uniform(0, 1)
-    #         error_number = np.exp(random.gauss(mu, sigma))
-    #         if rand_number < error_number:
-    #             pop_arr[i] = 1-pop_arr[i]
-    #     return pop_arr
 
 
 def seq_error_noise(pop_arr, error_rate_data, primerid_file):
@@ -129,7 +107,7 @@ def united_table_for_fits(generations, freq_type="New_freq"):
 
 
 def plot_sim_noisy(generations):
-    x_ticks = ["RNA\nControl", "", "2", "", "", "5", "", "", "8", "", "10", "", "12", ""]
+    x_ticks = ["0", "", "2", "", "", "5", "", "", "8", "", "10", "", "12", ""]
     x_order = range(0, 14, 1)
     united_df = pd.DataFrame()
     for g in generations:
@@ -155,11 +133,8 @@ def plot_sim_noisy(generations):
     rv_data["log_frequency"] = np.log10(rv_data["frequency"])
     rv_data["Type"] = "RVB14 RdRp Synonymous mutations"
     data = pd.concat([united_df_sim, united_df_noisy, rv_data])
-    plot = sns.catplot(x="gen", y="frequency", data=data, hue="Type", kind="box", order=x_order, legend=False)
+    plot = sns.catplot(x="gen", y="frequency", data=data, hue="Type", kind="box", order=x_order)
     plot.set(xlabel="Passage", ylabel="Variant Frequency", yscale="log", ylim=(10 ** -5, 10 ** -2), xticklabels=x_ticks)
-    plot.add_legend(loc="upper center", borderaxespad=0., ncol=3)#.legend(loc="upper center")#, bbox_to_anchor=(0.5, 0.1)
-    # plt.autoscale()
-    plt.tight_layout()
     plt.savefig("fig4.png")
     plt.close()
 
@@ -178,14 +153,14 @@ def main():
     pos_no = 100
     data_error_dist = pd.read_csv("error_table.csv")
     # mu, sigma = error_rate_dist(data_error_dist)
-    # sim_pop_new, pop_arr_noise = analyse_ffpop(population_size, generations, chosen_pop, pos_no, data_error_dist)
-    # np.save("sim_pop_new.npy", sim_pop_new)
-    # np.save("pop_arr_noise.npy", pop_arr_noise)
+    sim_pop_new, pop_arr_noise = analyse_ffpop(population_size, generations, chosen_pop, pos_no, data_error_dist)
+    np.save("sim_pop_new.npy", sim_pop_new)
+    np.save("pop_arr_noise.npy", pop_arr_noise)
     plot_sim_noisy(generations)
 
     """Arrnge the data for FITS"""
-    # df_all = united_table_for_fits(generations, freq_type="Noisy_freq")
-    # df_all.to_csv("sim_data_hiv_noisy.txt", index=False, sep="\t")
+    df_all = united_table_for_fits(generations, freq_type="Noisy_freq")
+    df_all.to_csv("sim_data_hiv_noisy.txt", index=False, sep="\t")
 
     """Debugging seq_error_noise"""
     # sim_pop_new = np.load("sim_pop_new.npy")

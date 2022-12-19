@@ -14,6 +14,8 @@ import contextlib
 
 
 sns.set_style("ticks")
+sns.set(font_scale=1.1)
+sns.despine()
 
 
 class MinorSymLogLocator(Locator):
@@ -175,7 +177,7 @@ def main():
         with contextlib.redirect_stdout(o):
             passage_g1, test_results = annot.annotate()
 
-    g1.legend(bbox_to_anchor=(0.5, -0.3), loc="lower center", borderaxespad=0.)
+    g1.legend(bbox_to_anchor=(0.5, 1.5), loc="upper center", frameon=False)
     plt.tight_layout()
     plt.savefig("mutation_rate.png", dpi=300)
     plt.close()
